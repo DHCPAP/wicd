@@ -257,6 +257,8 @@ class BaseInterface(object):
 
         self.dhclient_cmd = None
         self.dhclient_needs_verbose = False
+        self.dhcpcanon_cmd = None
+        self.dhcpcanon_needs_verbose = False
         self.udhcpc_cmd = None
         self.dhcpcd_cmd = None
         self.pump_cmd = None
@@ -317,6 +319,11 @@ class BaseInterface(object):
                 cmd = self.dhclient_cmd
                 if self.dhclient_needs_verbose:
                     cmd += ' -v'
+            elif self.dhcpcanon_cmd and cl in [misc.DHCPCANON, misc.AUTO]:
+                client = "dhcpcanon"
+                cmd = self.dhcpcanon_cmd
+                if self.dhcpcanon_needs_verbose:
+                    cmd += ' -v'
             elif self.udhcpc_cmd and cl in [misc.UDHCPC, misc.AUTO]:
                 client = "udhcpc"
                 cmd = self.udhcpc_cmd
@@ -338,7 +345,13 @@ class BaseInterface(object):
                  'release' : r"%(cmd)s -r %(iface)s",
                  'id' : misc.DHCLIENT, 
                  },
-            "pump" : 
+            "dhcpcanon" :
+                {'connect' : r"%(cmd)s %(iface)s",
+                 'connect_with_hostname' : r"%(cmd)s %(iface)s",
+                 'release' : r"",
+                 'id' : misc.DHCPCANON,
+                 },
+            "pump" :
                 { 'connect' : r"%(cmd)s -i %(iface)s %(extra)s",
                   'connect_with_hostname' : r"%(cmd)s -i %(iface)s -h %(hostname)s %(extra)s",
                   'release' : r"%(cmd)s -r -i %(iface)s",
@@ -455,6 +468,13 @@ class BaseInterface(object):
                 self.dhclient_needs_verbose = True
             else:
                 self.dhclient_needs_verbose = False
+        self.dhcpcanon_cmd = self._find_program_path("dhcpcanon")
+        if self.dhcpcanon_cmd != None:
+            print("command is dhcpcanon")
+            output = misc.Run(self.dhclient_cmd + " --version",
+                    include_stderr=True)
+            print(output)
+            self.dhcpcanon_needs_verbose = True
         self.dhcpcd_cmd = self._find_program_path("dhcpcd")
         self.pump_cmd = self._find_program_path("pump")
         self.udhcpc_cmd = self._find_program_path("udhcpc")
@@ -573,7 +593,35 @@ class BaseInterface(object):
                 dhclient_complete = True
                 
         return self._check_dhcp_result(dhclient_success)
-        
+
+    def _parse_dhcpcanon(self, pipe):
+        """ Parse the output of dhcpcanon.
+
+        Parses the output of dhcpcanon and returns the status of
+        the connection attempt.
+
+        Keyword arguments:
+        pipe -- stdout pipe to the dhcpcanon process.
+
+        Returns:
+        'success' if succesful', an error code string otherwise.
+
+        """
+        dhcpcanon_complete = False
+        dhcpcanon_success = False
+
+        while not dhcpcanon_complete:
+            line = pipe.readline()
+            if line == '':  # Empty string means dhcpcanon is done.
+                dhcpcanon_complete = True
+            else:
+                print misc.to_unicode(line.strip('\n'))
+            if line.startswith('bound'):
+                dhcpcanon_success = True
+                dhcpcanon_complete = True
+
+        return self._check_dhcp_result(dhcpcanon_success)
+
     def _parse_pump(self, pipe):
         """ Determines if obtaining an IP using pump succeeded.
 
@@ -684,6 +732,7 @@ class BaseInterface(object):
                         misc.DHCPCD : self._parse_dhcpcd,
                         misc.PUMP : self._parse_pump,
                         misc.UDHCPC : self._parse_udhcpc,
+                        misc.DHCPCANON : self._parse_dhcpcanon,
                       }
         
         DHCP_CLIENT = self._get_dhcp_command()
@@ -701,7 +750,7 @@ class BaseInterface(object):
         cmd = self._get_dhcp_command("release")
         if self.verbose:
             print cmd
-        misc.Run(cmd)
+        # misc.Run(cmd)
 
     @neediface(False)
     def DelDefaultRoute(self):

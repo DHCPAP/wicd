@@ -62,6 +62,7 @@ DHCLIENT = 1
 DHCPCD = 2
 PUMP = 3
 UDHCPC = 4
+DHCPCANON = 5
 
 # Link detection tools
 ETHTOOL = 1
@@ -157,7 +158,10 @@ def Run(cmd, include_stderr=False, return_pipe=False,
     except OSError, e:
         print "Running command %s failed: %s" % (str(cmd), str(e))
         return ""
-        
+    except IndexError as e:
+        print(e)
+	print("cmd", cmd)
+        return ""
     if return_obj:
         return f
     if return_pipe:

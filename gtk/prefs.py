@@ -84,6 +84,7 @@ class PreferencesDialog(object):
         self.ktsussradio = None
 
         self.dhclientradio = None
+        self.dhcpcanonradio = None
         self.dhcpautoradio = None
         self.pumpradio = None
         self.udhcpcradio = None
@@ -132,7 +133,8 @@ class PreferencesDialog(object):
         self.preferwiredcheckbox.set_active(daemon.GetPreferWiredNetwork())
         self.showneverconnectcheckbox.set_active(daemon.GetShowNeverConnect())
 
-        dhcp_list = [self.dhcpautoradio, self.dhclientradio, self.dhcpcdradio,
+        dhcp_list = [self.dhcpautoradio, self.dhcpcanonradio,
+                     self.dhclientradio, self.dhcpcdradio,
                      self.pumpradio, self.udhcpcradio]
         self._setup_external_app_radios(
             dhcp_list, daemon.GetDHCPClient, daemon.SetDHCPClient)
@@ -278,6 +280,8 @@ class PreferencesDialog(object):
             dhcp_client = misc.AUTO
         elif self.dhclientradio.get_active():
             dhcp_client = misc.DHCLIENT
+        elif self.dhcpcanonradio.get_active():
+            dhcp_client = misc.DHCPCANON
         elif self.dhcpcdradio.get_active():
             dhcp_client = misc.DHCPCD
         elif self.pumpradio.get_active():
@@ -429,6 +433,7 @@ class PreferencesDialog(object):
         self.dhcpautoradio = setup_label(
             "dhcp_auto_radio", _('Automatic (recommended)'))
         self.dhclientradio = self.wTree.get_object("dhclient_radio")
+        self.dhcpcanonradio = self.wTree.get_object("dhcpcanon_radio")
         self.pumpradio = self.wTree.get_object("pump_radio")
         self.dhcpcdradio = self.wTree.get_object("dhcpcd_radio")
         self.udhcpcradio = self.wTree.get_object("udhcpc_radio")

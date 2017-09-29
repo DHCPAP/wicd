@@ -99,6 +99,7 @@ class PrefsDialog(urwid.WidgetWrap):
         dhcp2_t = 'dhcpcd'
         dhcp3_t = 'pump'
         dhcp4_t = 'udhcpc'
+        dhcp5_t = 'dhcpcanon'
 
         wired_detect_header_t = ('header', _('Wired Link Detection'))
         wired1_t = 'ethtool'
@@ -215,6 +216,7 @@ class PrefsDialog(urwid.WidgetWrap):
         externalLB = urwid.ListBox([
             self.dhcp_header,
             self.dhcp0, self.dhcp2, self.dhcp3, self.dhcp1, self.dhcp4,
+            self.dhcp5,
             _blank,
             self.wired_detect_header,
             self.wired0, self.wired1, self.wired2,
